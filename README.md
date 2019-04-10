@@ -14,7 +14,7 @@ For this we will need:
 #### Dependencies
 
 * Python >=3.6 [Tested on 3.7]
-* AWS CLI configured with access to *Cloudformation*
+* AWS CLI configured with access to *Cloudformation* and *DynamoDB*
 
 #### Creation
 Open Terminal/CMD and navigate to the backend folder
@@ -150,7 +150,7 @@ Since we have the main table + 3 indexes, everytime you write into the main tabl
 
 
 ### Performance
-DynamoDB is optimized with indexing which results in requests with an average of *30ms* latency
+DynamoDB is optimized with indexing which results in requests latency is <100ms 
 
 ### Deployment
 Since the solutions is leveraging *CloudFormation* for infrastructure as code. I makes it simple to have multiple environments
@@ -162,3 +162,9 @@ Since the solutions is leveraging *CloudFormation* for infrastructure as code. I
 
 ### Why Flatter the Events?
 This was a quick solution to be able to index nexted object like *Location.name*
+
+## Clean Up
+Delete the CloudFormation stack
+```
+aws cloudformation delete-stack --stack-name NAME
+```
