@@ -107,13 +107,13 @@ npm install
 ### Local
 Make sure that `frontend/config.js` file has `local: true` and run 
 ```
-npm run-script
+npm run-script start
 ```
 
 ### Remote
 Make sure that `frontend/config.js` file has `local: false` and run 
 ```
-npm run-script
+npm run-script start
 ```
 ## Summary
 ### Features
