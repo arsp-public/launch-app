@@ -1,0 +1,12 @@
+.launches {
+  display: grid;
+  grid-template-columns: none;
+  padding: 10px;
+}
+
+.rockets {
+  display: grid;
+  grid-template-columns: none;
+  padding: 10px;
+
+}

@@ -1,0 +1,168 @@
+---
+AWSTemplateFormatVersion : 2010-09-09
+Description: Creates resources for Rocket Launch app
+Outputs:
+  CognitoIdentityPoolID:
+    Description: The Cognito Identity Pool ID
+    Value:
+      Ref: RocketLaunch
+  LaunchesDb:
+    Description: DynamoDB Table
+    Value:
+      Ref: LaunchesDb
+Resources:
+    LaunchesDb:
+        Type: AWS::DynamoDB::Table
+        Properties:
+          BillingMode: PAY_PER_REQUEST
+          AttributeDefinitions:
+            -
+              AttributeName: "rocket-familyname"
+              AttributeType: "S"
+            -
+              AttributeName: "lsp-name"
+              AttributeType: "S"
+            -
+              AttributeName: "location-name"
+              AttributeType: "S"
+            - 
+              AttributeName: "isostart"
+              AttributeType: "S"
+            - 
+              AttributeName: "hot"
+              AttributeType: "S"
+                
+          KeySchema:
+            -
+              AttributeName: "hot"
+              KeyType: "HASH"
+            - 
+              AttributeName: "isostart"
+              KeyType: "RANGE"
+          GlobalSecondaryIndexes:
+            -
+              IndexName: "locationIndex"
+              KeySchema:
+                -
+                  AttributeName: "location-name"
+                  KeyType: "HASH"
+                -
+                  AttributeName: "isostart"
+                  KeyType: "RANGE"
+              Projection:
+                NonKeyAttributes:
+                  - "net"
+                  - "id"
+                  - "isonet"
+                  - "rocket-name"
+                  - "lsp-name"
+                  - "rocket-familyname"
+                  - "location-pads"
+                  - "location-id"
+                  - "location-infoURL"
+                  - "location-wikiURL"
+                  - "location-countryCode"
+                ProjectionType: "INCLUDE"
+            -
+              IndexName: "rocketIndex"
+              KeySchema:
+                -
+                  AttributeName: "rocket-familyname"
+                  KeyType: "HASH"
+                -
+                  AttributeName: "isostart"
+                  KeyType: "RANGE"
+              Projection:
+                NonKeyAttributes:
+                  - "net"
+                  - "isonet"
+                  - "id"
+                  - "location-name"
+                  - "lsp-name"
+                  - "rocket-id"
+                  - "rocket-name"
+                  - "rocket-configuration"
+                  - "rocket-agencies"
+                  - "rocket-wikiURL"
+                  - "rocket-infoURLs"
+                  - "rocket-imageURL"
+                ProjectionType: "INCLUDE"
+            -
+              IndexName: "lspIndex"
+              KeySchema:
+                -
+                  AttributeName: "lsp-name"
+                  KeyType: "HASH"
+                -
+                  AttributeName: "isostart"
+                  KeyType: "RANGE"
+              Projection:
+                NonKeyAttributes:
+                  - "net"
+                  - "isonet"
+                  - "id"
+                  - "location-name"
+                  - "rocket-name"
+                  - "rocket-familyname"
+                  - "lsp-name"
+                  - "lsp-id"
+                  - "lsp-abbrev"
+                  - "lsp-countryCode"
+                  - "lsp-type"
+                  - "lsp-infoURL"
+                  - "lsp-wikiURL"
+                  - "lsp-changed"
+                  - "lsp-infoURLs"
+                ProjectionType: "INCLUDE"
+    RocketLaunch:
+        Type: AWS::Cognito::IdentityPool
+        Properties:
+          IdentityPoolName:
+            Fn::Sub: "RocketLaunchCognitoIdentityPool${AWS::StackName}"
+          AllowUnauthenticatedIdentities: True
+    AnonymousUser:
+        Type: AWS::IAM::Role
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Action: sts:AssumeRoleWithWebIdentity
+              Effect: Allow
+              Principal:
+                Federated: 'cognito-identity.amazonaws.com'
+              Condition:
+                StringEquals:
+                  cognito-identity.amazonaws.com:aud:
+                    Ref: RocketLaunch
+          Policies:
+            -
+              PolicyName: "root"
+              PolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                - 
+                  Action: 
+                    - dynamodb:Query
+                  Effect: Allow
+                  Resource: 
+                    -
+                      Fn::GetAtt: [LaunchesDb, Arn]
+                    -
+                      Fn::Join:
+                        - "/"
+                        - 
+                            - Fn::GetAtt: [LaunchesDb, Arn]
+                            - "index"
+                            - "*"
+
+    CognitoRoleAttachment:
+      Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+      Properties:
+        IdentityPoolId:
+          Ref: RocketLaunch
+        Roles:
+          unauthenticated:
+            Fn::GetAtt: [AnonymousUser, Arn]
+
+
+
