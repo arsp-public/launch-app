@@ -3,6 +3,7 @@ import boto3
 from decimal import Decimal
 from datetime import datetime
 from uuid import uuid4
+import config
 
 def remove_empty(original):
   for k,v in original.copy().items():
@@ -69,14 +70,14 @@ def parse_dict(original):
     original = parse_dict(original.copy())
   return original
 
-def upload(data):
-  import config
+def upload_batch(data):
   dynamodb = boto3.resource("dynamodb", region_name=config.region)
   table = dynamodb.Table(config.table_name)
-  for item in data:
-    item = parse_number(item)
-    item = remove_empty(item)
-    table.put_item(Item=item)
+  with table.batch_writer(overwrite_by_pkeys=["hot", "isostart"]) as batch:
+    for item in data:
+      item = parse_number(item)
+      item = remove_empty(item)
+      batch.put_item(Item=item)
     
 def download(limit, future=False):
   if future:
@@ -90,10 +91,10 @@ if __name__ == '__main__':
   data = download(10, future=True)
   for item in data:
     item['hot'] = "yes"
-  upload(data)
+  upload_batch(data)
 
   data = download(999999)
   for item in data:
     item['hot'] = f"no-{str(uuid4())}"
-  upload(data)
+  upload_batch(data)
   
